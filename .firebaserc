@@ -1,0 +1,14 @@
+{
+  "targets": {
+    "app-diario-viagens": {
+      "hosting": {
+        "diarios-app": [
+          "app-diario-viagens"
+        ]
+      }
+    }
+  },
+  "projects": {
+    "default": "app-diario-viagens"
+  }
+}
