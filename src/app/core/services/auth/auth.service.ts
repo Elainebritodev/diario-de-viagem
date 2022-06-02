@@ -12,7 +12,8 @@ import {
   User,
 } from '@firebase/auth';
 import { collection, setDoc, updateDoc } from '@firebase/firestore';
-import { first, from, Observable, tap } from 'rxjs';
+
+import { first, from, map, Observable, switchMap, tap } from 'rxjs';
 
 // Firebase Versão Modular
 @Injectable({
@@ -24,9 +25,7 @@ export class AuthService {
     private db: Firestore, // serviços de banco firestore do firebase
     private router: Router // mudar de rota de forma imperativa
   ) { }
-
   uid?: string; // guarda o id único do usuário logado
-
   get logged() {
     // se é null, o usuário está deslogado
     return authState(this.auth).pipe(
@@ -37,18 +36,23 @@ export class AuthService {
       })
     );
   }
-
-
   get userData() {
-    //Referencia o documento do usuário logado
+    // Referencia o documento do usuário logado
     const userDoc = doc(this.usuarios, this.uid);
-    //pega apenas a primeira amostra de dados e encerra o observable
+    // "Pega" apenas a primeira amostra de dados e encerra o observable
     return docData(userDoc).pipe(first());
   }
 
-
-
-
+  get isAdmin() {
+    return authState(this.auth).pipe( // busca dados do auth do usuario logado
+      first(), // recebe apenas a primeira info
+      switchMap((user: any) => { // emite um novo obs com base no user
+        const userDoc = doc(this.usuarios, user?.uid);
+        return docData(userDoc).pipe(first()); // verifica o documento no banco 
+      }),
+      map((user) => user['isAdmin'] === true) /* verifica se o user logado possui a propriedade*/
+    );
+  }
 
   usuarios = collection(this.db, 'usuarios'); // referencia possível coleção
 
@@ -71,12 +75,10 @@ export class AuthService {
           nome: nome,
           nick: nick,
         });
-
         this.emailVerificacao(creds.user);
       })
     );
   }
-
   loginEmail(email: string, password: string) {
     // Realiza o login com base no email/senha
     // O return é necessário para o componente de login
@@ -87,7 +89,6 @@ export class AuthService {
       })
     );
   }
-
   logout(rota: '/login' | '/confirmar-email') {
     // Desloga o usuário e ao final
     // navega para uma rota determinada
@@ -97,7 +98,6 @@ export class AuthService {
       })
     );
   }
-
   emailVerificacao(user: any) {
     if (!user.emailVerified) {
       sendEmailVerification(user);
@@ -106,7 +106,6 @@ export class AuthService {
       this.router.navigate(['/']);
     }
   }
-
   loginGoogle() {
     return from(signInWithPopup(this.auth, new GoogleAuthProvider())).pipe(
       tap((creds) => {
@@ -120,12 +119,10 @@ export class AuthService {
           nome: user.displayName, // 'displayName' contém o nome do usuário do google
           nick: 'Um usuário do Google',
         });
-
         this.router.navigate(['/']);
       })
     );
   }
-
   recoverPassword(email: string) {
     // com base no email do parâmetro envia um email para o usuário redefinir/resetar a senha
     return from(sendPasswordResetEmail(this.auth, email));
