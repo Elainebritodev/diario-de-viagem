@@ -16,11 +16,14 @@
       <mat-error *ngIf="loginForm.get('senha')?.errors?.['minlength']">O mínimo são 8 caracteres</mat-error>
       <mat-icon matPrefix>key</mat-icon>
     </mat-form-field>
-    <a routerLink="/recuperar-senha">Esqueci minha senha</a>
+    <a routerLink="/recuperar-senha">Esqueci minha senha</a><br>
+
     <button mat-raised-button color="primary" [disabled]="loginForm.invalid">Login</button>
     <span>ou</span>
     <button (click)="onLoginGoogle()" type="button" mat-raised-button color="warn">
       Entrar com o google
     </button>
   </form>
+  <a class="termos" routerLink="/termos-de-privacidade">Termos de Privacidade</a>
+
 </div>
